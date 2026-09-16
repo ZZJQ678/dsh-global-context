@@ -24,6 +24,18 @@ dsh plugin --profile web add -w <本包路径或 npm 包名>
 
 装完**重启一次 DSH Desktop**：客户端半边（标签页）需要在启动时加载。
 
+## 在插件市场里怎么看到它
+
+两件事要分清：
+
+- **本机已安装**：以 `link:` / `file:` 方式安装的插件，市场会认出来并在「已安装」列表里打上
+  **`本地开发`** 标签（判定规则是市场客户端的 `/^(?:link|file):/i.test(spec)`）。
+  用 `dsh plugin add <本地路径>` 装完重启后，这个插件就会出现在那里。
+- **公开精选目录**：市场搜索列表来自公开精选列表
+  [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin)（每日构建成
+  `plugins.json`）。想出现在所有人能搜到的地方，需要把包放到公网仓库并给那个列表提 PR ——
+  步骤与现成的收录描述见 [PUBLISHING.md](PUBLISHING.md)。
+
 ## 配置
 
 在 profile 的 `cordis.patch.yml` 里可以覆盖：

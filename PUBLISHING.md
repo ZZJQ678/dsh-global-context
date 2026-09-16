@@ -3,7 +3,6 @@
 ## 现状
 
 这个包已经按市场的收录要求打包好了：
-
 - `dsh.bundle.patch` —— 声明加载器补丁层，`dsh plugin add` 能直接装（这是精选列表的硬性门槛）
 - `dsh.client` —— 声明浏览器半边与加载顺序
 - `dsh.compatibility.dshReleases` —— 声明兼容的 DSH 版本
@@ -54,10 +53,18 @@ dsh plugin --profile web add -w github:<你的用户名>/dsh-global-context
 评审要点（来自官方 `contributing.md`）：能用 `dsh plugin add` 安装、行为与那一行描述一致、分类正确、有人在维护。
 收录通常一天内生效，站点与市场会自动跟进。
 
-## 关于「本地已装但市场看不到」
+## 关于「本地已装」与「公开目录」的区别
 
-这是预期行为，不是配置问题：市场只展示目录里的条目，不扫描 `node_modules`。
-装完这个包后，`dsh --profile web --dump-config` 里会出现带归属信息的条目：
+这两件事不是一回事，别混起来：
+
+- **本机已安装的会被市场识别出来。** 市场客户端对安装来源做了判定
+  （`lib` 侧 `localDev`：`/^(?:link|file):/i.test(spec) || status?.kind === "linked"`），
+  以 `link:` / `file:` 装的插件会在「已安装」列表里带一个 **`本地开发`** 标签。
+  也就是说：`dsh plugin add <本地路径>` 装完重启后，市场里**看得到**这个插件，
+  并且会尝试按包名去精选目录匹配、提供「改用线上版本」的入口。
+- **但公开搜索列表里没有它。** 那部分只来自精选目录，必须走上面的第 1~3 步。
+
+装完后 `dsh --profile web --dump-config` 里会出现带归属信息的条目，可用来确认 dsh 真的认了这个包：
 
 ```yaml
 - id: dsh-global-context
