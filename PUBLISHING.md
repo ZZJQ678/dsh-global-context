@@ -18,6 +18,19 @@
 
 前置条件「有个公网地址」已经满足，剩下的是第 3 步。
 
+## 在市场里怎么看到它（读市场源码实测）
+
+**打开插件市场，搜索 `全局上下文` 或 `dsh-global-context` 就能看到。**
+
+从已安装的 `dshmarket` 源码里核到的三条行为：
+
+1. **搜索匹配四个字段**：包名、安装来源（spec）、描述（按界面语言取 `description[lang] || description.en`）、
+   作者名（`client/client.js` 第 9890–9895 行）。所以中文描述写进精选目录后，搜中文词也能命中。
+2. **详情页只抓 `README.md`**，没有语言分支
+   （`client/client.js` 第 1999 行：`…/HEAD/README.md`）。**因此 `README.md` 必须是中文**，
+   进去后默认页面才是中文。本仓库已按此调整：`README.md` = 中文，`README.en.md` = 英文。
+3. 本机用 `link:` / `file:` 装过的插件，会在「已安装」列表里带一个 **`本地开发`** 标签。
+
 ## 第 1 步：推到 GitHub ✅ 已完成
 
 ```bash
@@ -31,8 +44,11 @@ git push -u origin main
 这一步是精选列表的评审依据 —— 他们会照着自己的源检查描述是否属实。
 
 ```bash
-dsh plugin --profile web add -w github:<你的用户名>/dsh-global-context
+dsh plugin --profile web add -w github:ZZJQ678/dsh-global-context
 ```
+
+npm 包名 `dsh-global-context` 尚未被占用；发布到 npm 之后，命令可直接写成
+`dsh plugin --profile web add -w dsh-global-context`（发布需要 npm 登录凭据）。
 
 ## 第 3 步：给精选列表提 PR（**新增一个 YAML 文件，不要改 README**）
 

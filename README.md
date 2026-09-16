@@ -1,112 +1,108 @@
-# dsh-global-context
+# dsh-global-context（全局上下文配置）
 
-Global context for DeepSeek Harness: inject a custom prompt at the **very top of every
-session's system prompt**, and edit it from a dedicated **Global Context** tab in the
-conversation view.
+给 DSH 加一个**全局上下文**：你写的一段提示词会自动注入到每个会话系统提示词的最顶部，
+并在对话视图里新增一个「全局上下文配置」标签页，随时编辑、保存、清空。
 
-[中文说明](README.zh.md)
+[English](README.en.md)
 
-## What it does
+## 它做什么
 
-1. **Injects a global context.** Your text becomes the first section of the system prompt —
-   ahead of the built-in harness identity — for every session, every model, subagents included.
-2. **Adds a conversation-view tab.** A fourth tab, `Global Context`, appears next to
-   Chat / Trajectory / Context: a text box you can edit, save and clear.
-3. **Applies immediately, no restart.** The text lives in a plain file, re-read per prompt
-   assembly, so the next message already carries your edit. Editing the file in Notepad works
-   exactly the same.
+1. **注入全局上下文。** 你写的文字会成为系统提示词的第一段 —— 排在 DSH 内置的身份说明之前 ——
+   对每个会话、每个模型都生效，子代理同样生效。
+2. **在对话视图新增一个标签页。** 原装 DSH 的对话视图**只有「对话」一个标签页**，
+   「轨迹」「上下文」等是后续装插件才有的；本插件在**所有已有标签页之后**新增
+   「全局上下文配置」（`order: 900`），里面是一个文本框，可以直接**编辑、保存、清空**。
+3. **保存即生效，不用重启。** 正文存在一个普通文本文件里，每次组装提示词时重新读取，
+   所以保存后下一条消息就带上了。直接用记事本改那个文件也一样有效。
 
-## Install
+## 安装
 
 ```bash
-dsh plugin --profile web add -w <path-or-npm-name>
+dsh plugin --profile web add -w github:ZZJQ678/dsh-global-context
 ```
 
-The package declares `dsh.bundle.patch`, so `reconcilePlugins()` appends it to the
-profile's `dsh.profile.bundles` automatically — no manual config editing.
+本包声明了 `dsh.bundle.patch`，装完会自动写进 profile 的 `dsh.profile.bundles`，不需要手工改配置。
+**装完重启一次 DSH**，浏览器半边的标签页才会加载。
 
-Restart DSH Desktop once afterwards: the browser-side half (the tab) loads at startup.
+> 本包的 npm 包名是 **`dsh-global-context`**（该名字在 npm 上尚未被占用）。
+> 发布到 npm 之后，安装命令可以直接写成 `dsh plugin --profile web add -w dsh-global-context`。
 
-## How it shows up in the plugin market
+## 在插件市场里怎么找到它
 
-Two different things:
+**打开插件市场，搜索 `全局上下文`（或 `dsh-global-context`）就能看到它。**
 
-- **Installed locally.** A package installed with `link:` / `file:` is recognised by
-  dsh-market and listed under *Installed* with a **`local`** badge (the client-side rule is
-  `/^(?:link|file):/i.test(spec)`). `dsh plugin add <local path>` plus a restart is enough.
-- **Public catalogue.** The market's search list comes from the curated
-  [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) list (built
-  into `plugins.json` daily). To be searchable by everyone, publish the package publicly and
-  send that list a PR — see [PUBLISHING.md](PUBLISHING.md) for the steps and a ready-made entry.
+- 本机已经装好的，会出现在「已安装」列表里，并带一个「本地开发」标签；
+- 被公开目录收录后，在搜索列表里同样能搜到（收录流程见 [PUBLISHING.md](PUBLISHING.md)）。
 
-## Configuration
+市场搜索会匹配 **包名、安装来源、描述（按界面语言）、作者** 四个字段，所以上面两个关键词都能命中。
+进入插件详情页后，页面正文就是本文件 —— 也就是**中文**。
 
-Override in the profile's `cordis.patch.yml`:
+## 配置
+
+在 profile 的 `cordis.patch.yml` 里按 `id` 覆盖：
 
 ```yaml
 - id: dsh-global-context
   config:
-    enabled: true      # master switch; false injects nothing (the tab still reads/writes)
-    order: -1100       # section order; defaults to the built-in identity section minus 100
-    textPath: 'D:\somewhere\my-context.md'   # defaults to $DSH_HOME/global-context.md
-    statusPath: 'D:\somewhere\status.json'   # defaults to $DSH_HOME/global-context.status.json
+    enabled: true      # 总开关；false 时什么都不注入（标签页仍可读写）
+    order: -1100       # 段落序号；默认是内置身份段落序号减 100
+    textPath: 'D:\somewhere\my-context.md'   # 默认 $DSH_HOME/global-context.md
+    statusPath: 'D:\somewhere\status.json'   # 默认 $DSH_HOME/global-context.status.json
 ```
 
-## Where the text lives
+## 正文存在哪
 
-`$DSH_HOME/global-context.md` by default (on Windows usually
-`C:\Users\<you>\AppData\Roaming\dsh-desktop\harness\global-context.md`). The tab shows the
-real path at the bottom.
+默认 `$DSH_HOME/global-context.md`（Windows 上通常是
+`C:\Users\<你>\AppData\Roaming\dsh-desktop\harness\global-context.md`）。标签页底部会显示真实路径。
 
-- Empty or missing file → nothing is injected.
-- To switch it off temporarily, clear the box and save, or set `enabled: false`.
+- 文件为空或不存在 → 不注入任何内容；
+- 想临时关掉：把文本框清空保存，或把 `enabled` 设为 `false`。
 
-## Verifying a live install
+## 验证装好了没有
 
 ```bash
 node scripts/verify-live.mjs
 ```
 
-It reads the address and token from the harness log by itself, then checks four things:
-the host half loaded, the GUI route answers, saving really reaches disk (it backs up and
-restores your text; `--no-write` skips that), and the browser half is assembled into the
-page's `window.__DSH_BOOT__` and fetchable from `/plugins`.
+脚本会自己从 harness 日志里读到地址与令牌，然后检查四件事：宿主半边是否加载、GUI 路由是否应答、
+保存是否真的落盘（会先备份再还原你的正文，加 `--no-write` 可跳过）、以及浏览器半边是否已进入
+页面里的 `window.__DSH_BOOT__` 且能从 `/plugins` 取到。
 
-## Layout
+## 目录结构
 
-| Half | File | Role |
+| 半边 | 文件 | 作用 |
 | --- | --- | --- |
-| Host | `lib/index.js` | Registers the `systemPrompt` section and an exact route `/api/dsh-global-context` (GET read / POST write) |
-| Client | `lib/client.js` | Hand-written `window.__ModuleLoader__` artifact registering a `conversation.view` tab |
+| 宿主 | `lib/index.js` | 注册 `systemPrompt` 段落，并提供精确路由 `/api/dsh-global-context`（GET 读 / POST 写） |
+| 客户端 | `lib/client.js` | 手写的 `window.__ModuleLoader__` 产物，注册 `conversation.view` 标签页 |
 
-Two deliberate safety properties:
+两条刻意的安全约束：
 
-1. **`apply()` never throws.** The DSH loader settles every entry with `Promise.allSettled`,
-   and one failure rolls the whole profile back — i.e. DSH would not start. Registration
-   failures are logged and degraded instead.
-2. **Injected text never contains a live `{{...}}`.** The system-prompt renderer interpolates
-   strictly and *throws* on an unknown variable, which would break every request. So `{{` is
-   split into `{` + zero-width space + `{`: the renderer never sees a reference group while it
-   still looks like `{{`.
+1. **`apply()` 永不抛异常。** DSH 加载器用 `Promise.allSettled` 收敛每个条目，一个失败会回滚整个
+   profile —— 也就是 DSH 起不来。所以注册失败只记日志并降级。
+2. **注入的正文里不会出现活的 `{{...}}`。** 系统提示词渲染器做严格插值，遇到未知变量会**抛异常**，
+   那会让每个请求都失败。因此正文里的 `{{` 会被拆成 `{` + 零宽空格 + `{`：渲染器看不到引用组，
+   而肉眼看仍是 `{{`。
 
-The write endpoint enforces same-origin requests and a 256 KB cap, so a stray paste cannot
-bloat every request.
+写入接口限制同源请求与 256 KB 上限，避免误粘贴把每个请求都撑大。
 
-## Test
+## 测试
 
 ```bash
-DSH_HOME=<your harness dir> node --test test/host.test.mjs test/client.test.mjs test/manifest.test.mjs
+DSH_HOME=<你的 harness 目录> node --test test/host.test.mjs test/client.test.mjs test/manifest.test.mjs
 ```
 
-- `test/host.test.mjs` — mounts the **real** SystemPrompt service plus a fake webServer, and
-  checks injection position, live file edits, `{{}}` safety, and the route's read/write/refusal paths.
-- `test/client.test.mjs` — loads the hand-written artifact in Node with **real React**, checking
-  the module-table shape, tab registration, component rendering and API calls.
-- `test/manifest.test.mjs` — freezes the host's packaging/loading rules as assertions
-  (`exports["./client"]` form, `dsh.client` field types, artifact id must equal the package
-  name, zero runtime dependencies, patch `name` must equal the package name). Failing any of
-  them costs at worst a missing tab and at best a Web layer that refuses to start.
+- `test/host.test.mjs` —— 挂载**真实的** SystemPrompt 服务加一个假 webServer，验证注入位置、
+  文件实时生效、`{{}}` 安全处理，以及路由的读 / 写 / 拒绝三条路径。
+- `test/client.test.mjs` —— 在 Node 里用**真实 React** 加载手写产物，验证模块表结构、标签页注册
+  （含排序）、组件渲染与接口调用。
+- `test/manifest.test.mjs` —— 把宿主的打包与加载规则固化成断言（`exports["./client"]` 形式、
+  `dsh.client` 字段类型、产物 id 必须等于包名、零运行时依赖、补丁 `name` 必须等于包名）。
+  这些断言任何一条挂掉，轻则少一个标签页，重则整个 Web 层起不来。
 
-## License
+## 开发声明
+
+**本插件的宿主半边、浏览器半边、测试与文档，全程使用 DSH（DeepSeek Harness）编写完成。**
+
+## 许可
 
 MIT

@@ -1,7 +1,7 @@
 {
   "name": "dsh-global-context",
   "version": "1.0.0",
-  "description": "全局上下文：把一段自定义提示词注入到每个会话系统提示词的最顶部，并在对话视图提供一个「全局上下文配置」标签页用于随时编辑。",
+  "description": "全局上下文：把一段自定义提示词注入到每个会话系统提示词的最顶部，并在对话视图新增「全局上下文配置」标签页（文本框可直接编辑、保存、清空）。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -18,7 +18,7 @@
     "lib/client.js",
     "cordis.patch.yml",
     "README.md",
-    "README.zh.md",
+    "README.en.md",
     "LICENSE"
   ],
   "keywords": [
@@ -28,6 +28,14 @@
     "global-context",
     "system-prompt"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZZJQ678/dsh-global-context.git"
+  },
+  "homepage": "https://github.com/ZZJQ678/dsh-global-context#readme",
+  "bugs": {
+    "url": "https://github.com/ZZJQ678/dsh-global-context/issues"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

@@ -65,7 +65,11 @@ test('注册到 conversation.view 插槽，排在 对话/轨迹/上下文 之后
   const { options, component } = registered[0];
   assert.equal(options.name, 'conversation.view');
   assert.equal(options.id, 'global-context');
-  assert.equal(options.order, 30, '要排在 chat(0) / trajectory(10) / context(20) 之后');
+  assert.equal(
+    options.order,
+    900,
+    '要排在所有已有标签页之后：对话(0) / 轨迹(10) / 上下文(20)，以及以后新增的标签页',
+  );
   assert.equal(typeof options.label, 'function');
   assert.equal(options.label(), '全局上下文配置');
   assert.equal(typeof component, 'function');
