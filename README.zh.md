@@ -46,6 +46,7 @@ dsh plugin --profile web add -w <本包路径或 npm 包名>
     enabled: true      # 总开关；false 时完全不注入（标签页仍可读写）
     order: -1100       # 段顺序；默认取「内置身份段 - 100」
     textPath: 'D:\somewhere\my-context.md'   # 正文文件；默认 $DSH_HOME/global-context.md
+    statusPath: 'D:\somewhere\status.json'   # 加载状态文件；默认 $DSH_HOME/global-context.status.json
 ```
 
 ## 文本放在哪
@@ -71,14 +72,33 @@ dsh plugin --profile web add -w <本包路径或 npm 包名>
 
 路由的写入端点做了同源校验（浏览器请求必须同源），并有体积上限（256 KB），避免误粘贴把每个请求撑爆。
 
+## 装完怎么确认真的生效了
+
+有一条命令把整条链路验一遍：
+
+```bash
+node scripts/verify-live.mjs
+```
+
+它会自己从 harness 日志里读地址与令牌，然后检查四件事：
+
+1. **宿主半边加载了没有** —— 看 `$DSH_HOME/global-context.status.json`
+2. **GUI 读写接口在不在** —— `GET /api/dsh-global-context` 应返回 200
+3. **保存能不能真的落盘** —— POST 后再 GET 往返比对（会先备份、结束前还原原内容；加 `--no-write` 可跳过）
+4. **浏览器半边会不会被送进浏览器** —— 首页 `window.__DSH_BOOT__` 里有没有本包名，以及
+   `/plugins/dsh-global-context/client.js` 能不能取到
+
+第 4 项是关键：本包名出现在首页的客户端模块图里，就等于「标签页一定会被注册」。
+
 ## 测试
 
 ```bash
-DSH_HOME=<你的 harness 目录> node --test test/host.test.mjs test/client.test.mjs
+DSH_HOME=<你的 harness 目录> node --test test/host.test.mjs test/client.test.mjs test/manifest.test.mjs
 ```
 
 - `test/host.test.mjs`：装载**真实的** SystemPrompt 服务与一个假 webServer，验证注入位置、文件热更新、`{{}}` 安全、路由读写与拒绝逻辑。
 - `test/client.test.mjs`：在 Node 里用**真实的 React** 加载手写产物，验证模块表形状、标签页注册、组件渲染、接口调用。
+- `test/manifest.test.mjs`：把宿主的收录/加载规则固化成断言 —— `exports["./client"]` 的合法形式、`dsh.client` 各字段类型、产物模块 id 必须等于包名、零运行时依赖、补丁层里 `name` 必须等于包名。这几条任意一条不满足，轻则标签页不出现，重则 Web 层启动报错。
 
 ## 许可
 

@@ -77,7 +77,9 @@ async function createHost(config) {
   ctx.provide('webServer', webServer);
   ctx.plugin(SystemPrompt);
   await waitFor(() => ctx.systemPrompt !== undefined, 'systemPrompt 服务上线');
-  ctx.plugin({ name: plugin.name, inject: plugin.inject, apply: plugin.apply }, config);
+  // 状态文件固定写在临时目录：默认路径会落到真实 harness 目录，测试不该污染那里。
+  const options = { statusPath: path.join(workDir, 'global-context.status.json'), ...config };
+  ctx.plugin({ name: plugin.name, inject: plugin.inject, apply: plugin.apply }, options);
   await tick();
   return { ctx, webServer };
 }
@@ -183,7 +185,10 @@ test('没有 webServer 时仍然照常注入（GUI 通道缺席不影响提示�
   const ctx = new Context();
   ctx.plugin(SystemPrompt);
   await waitFor(() => ctx.systemPrompt !== undefined, 'systemPrompt 服务上线');
-  ctx.plugin({ name: plugin.name, inject: plugin.inject, apply: plugin.apply }, { textPath: textFile });
+  ctx.plugin(
+    { name: plugin.name, inject: plugin.inject, apply: plugin.apply },
+    { textPath: textFile, statusPath: path.join(workDir, 'global-context.status.json') },
+  );
   await tick();
   const prompt = renderPrompt(await ctx.systemPrompt.assemble({}));
   assert.ok(prompt.startsWith('只有提示词也要能用。'));
