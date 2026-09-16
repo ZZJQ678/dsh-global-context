@@ -4,14 +4,17 @@
 # dsh.bundle.patch 而自动把包名追加进 profile 的 dsh.profile.bundles；
 # 这一层再把宿主半边挂成一个 loader 条目。
 #
-# 文本文件位置由插件自身默认值决定：$DSH_HOME/global-context.md
-# 也可以在 config 里用绝对路径覆盖，例如：
-#   textPath: !!js dshHomePath('my-context.md')
+# 这里刻意保持「纯 insert」—— 只有 id 和 name，没有 config 块。
+# 插件市场（dsh-market）的热挂载只接受纯 insert：补丁里带 config/表达式会被判成
+# 「需要重启才能生效」。而插件的默认值（启用、$DSH_HOME/global-context.md、
+# 顺序取内置身份段前 100）本来就是想要的行为，所以这里不需要 config。
+#
+# 想覆盖默认值，请在 profile 的 cordis.patch.yml 里写：
+#   - id: dsh-global-context
+#     config:
+#       enabled: true
+#       textPath: 'D:\somewhere\my-context.md'
 
 - insert:
     - id: dsh-global-context
       name: 'dsh-global-context'
-      config:
-        # 总开关。false 时完全不注入（标签页仍可读写文本）。
-        enabled: true
-        # 留空 order：自动取「内置身份段之前 100」，即整段系统提示词的第一节。

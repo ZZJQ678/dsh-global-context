@@ -124,3 +124,20 @@ test('files 白名单覆盖所有运行必需文件', () => {
     assert.ok(files.includes(required), `files 里缺少 ${required}`);
   }
 });
+
+test('补丁层保持「纯 insert」（市场的热挂载只接受这种形式）', () => {
+  // dsh-market 的 hotMount 用 parseSimplePatch 解析补丁：只要出现 config 块、
+  // disable 行或 YAML 表达式，就返回 null，并把插件判成「重启后生效」。
+  // 保持纯 insert，市场就能热挂载 —— 将来升级不必重启。
+  const source = readFileSync(path.join(root, manifest.dsh.bundle.patch), 'utf8');
+  const body = source
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('#'))
+    .join('\n');
+  assert.ok(body.includes('insert:'), '补丁必须是一个 insert 列表');
+  assert.ok(!/\bconfig:/.test(body), '补丁里出现 config 块会让市场判定为「需要重启」');
+  assert.ok(!/!!/.test(body), '补丁里出现 YAML 表达式同样会让市场判定为「需要重启」');
+  const keys = [...body.matchAll(/^\s*([A-Za-z_][\w-]*):/gm)].map((match) => match[1]);
+  const allowed = new Set(['insert', 'id', 'name']);
+  for (const key of keys) assert.ok(allowed.has(key), `补丁里出现了 id/name 之外的键：${key}`);
+});

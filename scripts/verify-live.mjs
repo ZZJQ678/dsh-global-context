@@ -37,6 +37,10 @@ const check = (label, ok, detail = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail ? `  -> ${detail}` : ''}`);
   if (!ok) failures++;
 };
+/** 不计入失败：事实与预期有出入，但有正当解释，需要人看一眼。 */
+const warn = (label, detail = '') => {
+  console.log(`WARN  ${label}${detail ? `  -> ${detail}` : ''}`);
+};
 
 // ── 找地址与令牌 ────────────────────────────────────────────────
 function findEndpoint() {
@@ -79,15 +83,16 @@ if (endpoint.error !== undefined) {
   // 真实加载用的是默认正文路径 $DSH_HOME/global-context.md；测试用的是临时目录。
   const statusPath = path.join(home, 'global-context.status.json');
   const expectedText = path.join(home, 'global-context.md');
+  let statusData = null;
   if (existsSync(statusPath)) {
     const status = JSON.parse(readFileSync(statusPath, 'utf8'));
     const isReal = path.resolve(String(status.textPath ?? '')) === path.resolve(expectedText);
     if (!isReal) {
       check('宿主半边已加载（状态文件存在）', false, `状态文件是别的来源留下的（textPath=${String(status.textPath)}），不是真实加载`);
     } else {
+      statusData = status;
       check('宿主半边已加载（状态文件存在）', status.ok === true, `at=${status.at}`);
       check('提示词段注册成功', status.sectionError == null, String(status.sectionError ?? ''));
-      check('GUI 路由注册成功', status.routeRegistered === true, `routeError=${String(status.routeError ?? '')}`);
       check('正文文件路径正确', true, String(status.textPath));
       console.log(`      段=${status.sectionName} order=${status.order} enabled=${status.enabled} 字节=${status.bytes}`);
     }
@@ -97,14 +102,26 @@ if (endpoint.error !== undefined) {
 
   // ── 2. GUI 读写路由 ──────────────────────────────────────────
   let readBody = null;
+  let routeOk = false;
   try {
     const response = await fetch(`${base}/api/dsh-global-context`, { headers });
     const body = await response.json().catch(() => null);
     readBody = body;
-    check('GET /api/dsh-global-context 返回 200', response.status === 200, `HTTP ${response.status}`);
+    routeOk = response.status === 200;
+    check('GET /api/dsh-global-context 返回 200', routeOk, `HTTP ${response.status}`);
     check('返回体 ok=true', body?.ok === true, JSON.stringify(body?.error ?? ''));
   } catch (error) {
     check('GET /api/dsh-global-context 返回 200', false, error.message);
+  }
+
+  // 状态文件里的 routeRegistered 只在比较旧的行为下会与实测不符：路由是异步注册的，
+  // 旧版本只在 apply 末尾记一次状态。接口实测才是准的，所以这种情况只提醒、不判失败。
+  if (statusData !== null) {
+    if (statusData.routeRegistered === true || !routeOk) {
+      check('状态文件与实测一致（路由已注册）', statusData.routeRegistered === true, `routeError=${String(statusData.routeError ?? '')}`);
+    } else {
+      warn('状态文件里 routeRegistered=false，但接口实测可用', '状态文件由旧版本写入，下次重启即一致');
+    }
   }
 
   if (readBody?.ok === true) {
@@ -156,15 +173,30 @@ if (endpoint.error !== undefined) {
   try {
     const html = await (await fetch(`${base}/`, { headers })).text();
     check('首页可取到', html.length > 1000, `${html.length} 字符`);
+    const inGraph = html.includes('dsh-global-context/client.js');
     check(
       '首页的客户端模块图里包含本包（标签页会被加载）',
-      html.includes('dsh-global-context'),
-      '未见本包名 —— 浏览器半边没有被组装进 __DSH_BOOT__',
+      inGraph,
+      inGraph ? '' : '未见本包名 —— 浏览器半边没有被组装进 __DSH_BOOT__',
     );
-    const served = await fetch(`${base}/plugins/dsh-global-context/client.js`, { headers });
-    const source = served.ok ? await served.text() : '';
-    check('客户端产物可从 /plugins 取到', served.ok && source.includes('全局上下文配置'), `HTTP ${served.status}`);
-    check('产物里注册的是 conversation.view 插槽', source.includes('conversation.view'));
+
+    // 产物是按组合 URL 批量下发的（带 rev），单独的 /plugins/<id>/client.js 不一定存在，
+    // 所以要取首页里真实出现的那条地址。
+    const urls = [...html.matchAll(/\/plugins\/\?\?[^"'\s\\]+/g)].map((match) => match[0].replace(/&amp;/g, '&'));
+    const mine = urls.find((url) => url.includes('dsh-global-context/client.js'));
+    check(
+      '在启动批次里找到了本包的产物地址',
+      mine !== undefined,
+      mine === undefined ? '' : `rev=${mine.split('rev=')[1] ?? '?'}`,
+    );
+
+    if (mine !== undefined) {
+      const served = await fetch(`${base}${mine}`, { headers });
+      const source = served.ok ? await served.text() : '';
+      check('客户端产物可实际取到', served.ok && source.length > 0, `HTTP ${served.status}，${source.length} 字符`);
+      check('产物里含标签名「全局上下文配置」', source.includes('全局上下文配置'));
+      check('产物里注册的是 conversation.view 插槽', source.includes('conversation.view'));
+    }
   } catch (error) {
     check('首页可取到', false, error.message);
   }
