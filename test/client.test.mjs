@@ -71,7 +71,7 @@ test('注册到 conversation.view 插槽，排在 对话/轨迹/上下文 之后
     '要排在所有已有标签页之后：对话(0) / 轨迹(10) / 上下文(20)，以及以后新增的标签页',
   );
   assert.equal(typeof options.label, 'function');
-  assert.equal(options.label(), '全局上下文配置');
+  assert.equal(options.label(), '全局提示词配置');
   assert.equal(typeof component, 'function');
 });
 
@@ -208,7 +208,7 @@ test('chooseOrder / readOtherTabs 直接可用（测试接缝）', () => {
 test('组件能渲染出标签页内容（真实 React 服务端渲染）', () => {
   const { GlobalContextView } = pluginModule.__internal;
   const html = renderToStaticMarkup(React.createElement(GlobalContextView));
-  assert.match(html, /全局上下文配置/);
+  assert.match(html, /全局提示词配置/);
   assert.match(html, /读取中/);
   assert.match(html, /textarea/);
 });

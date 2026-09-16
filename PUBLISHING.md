@@ -20,7 +20,7 @@
 
 ## 在市场里怎么看到它（读市场源码实测）
 
-**打开插件市场，搜索 `全局上下文` 或 `dsh-global-context` 就能看到。**
+**打开插件市场，搜索 `全局提示词` 或 `dsh-global-context` 就能看到。**
 
 从已安装的 `dshmarket` 源码里核到的三条行为：
 
@@ -60,8 +60,8 @@ url: https://github.com/<owner>/dsh-global-context
 name: <owner>/dsh-global-context
 category: session
 description:
-  en: 'Global context for DeepSeek Harness: injects a custom prompt at the very top of every session system prompt, and adds a Global Context tab in the conversation view to edit it live.'
-  zh: '全局上下文：把自定义提示词注入到每个会话系统提示词的最顶部，并在对话视图新增「全局上下文配置」标签页随时编辑，保存后下一条消息即生效。'
+  en: 'Global prompt for DeepSeek Harness: injects a custom prompt at the very top of every session system prompt, and adds a Global Prompt tab in the conversation view to edit it live.'
+  zh: '全局提示词：把自定义提示词注入到每个会话系统提示词的最顶部，并在对话视图新增「全局提示词配置」标签页随时编辑，保存后下一条消息即生效。'
 ```
 
 ⚠️ 描述里出现半角冒号加空格（`: `）时**必须加引号**，否则 YAML 会当成嵌套键解析失败。

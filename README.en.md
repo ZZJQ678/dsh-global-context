@@ -14,7 +14,7 @@ gives you a tab in the conversation view to edit it.
 text) for every session, every model, subagents included.
 
 **Editable right in the conversation view.** A stock DSH conversation view has only one tab, `Chat`;
-`Trajectory` and `Context` appear only once plugins add them. With this plugin, a **Global Context**
+`Trajectory` and `Context` appear only once plugins add them. With this plugin, a **Global Prompt**
 tab shows up after the existing ones, holding that text — edit it, save it, clear it.
 
 **Takes effect immediately.** The text lives in a plain file that is re-read per message, so saving is

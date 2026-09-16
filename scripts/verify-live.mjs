@@ -133,7 +133,7 @@ if (endpoint.error !== undefined) {
     const onDisk = existsSync(filePath) ? readFileSync(filePath, 'utf8') : null;
     check('接口返回的文本与磁盘文件一致', onDisk === original, onDisk === null ? '文件不存在' : '');
     check('段注册状态为真', readBody.sectionRegistered === true, String(readBody.sectionError ?? ''));
-    check('正文非空（当前有全局上下文）', original.trim().length > 0, `${original.length} 字符`);
+    check('正文非空（当前有全局提示词）', original.trim().length > 0, `${original.length} 字符`);
     console.log(`      文件=${filePath}  顺序=${readBody.order}  上限=${readBody.maxBytes} 字节`);
 
     // ── 3. 写入往返（改完还原）─────────────────────────────────
@@ -197,7 +197,7 @@ if (endpoint.error !== undefined) {
       const served = await fetch(`${base}${mine}`, { headers });
       const source = served.ok ? await served.text() : '';
       check('客户端产物可实际取到', served.ok && source.length > 0, `HTTP ${served.status}，${source.length} 字符`);
-      check('产物里含标签名「全局上下文配置」', source.includes('全局上下文配置'));
+      check('产物里含标签名「全局提示词配置」', source.includes('全局提示词配置'));
       check('产物里注册的是 conversation.view 插槽', source.includes('conversation.view'));
     }
   } catch (error) {
