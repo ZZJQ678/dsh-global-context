@@ -11,8 +11,12 @@ Global context for DSH: a prompt injected at the **very top of every session's s
    the built-in identity text — for every session, every model, subagents included.
 2. **Adds a conversation-view tab.** A **stock DSH conversation view has only one tab, `Chat`**;
    `Trajectory` and `Context` appear only once plugins add them. This plugin adds
-   **Global Context** *after every existing tab* (`order: 900`): a text box you can edit,
-   save and clear.
+   **Global Context**: a text box you can edit, save and clear.
+   **Its position is discovered at runtime**: it reads the sort values of the tabs already in the
+   slot and stops at the **first free slot** — i.e. immediately after the last one (with
+   Chat/Trajectory/Context present it is the 4th tab). If a plugin later lands ahead of it, it
+   steps one place back automatically. When the slot exposes no way to inspect entries, it falls
+   back to the large constant `900`, which also sorts last.
 3. **Applies immediately, no restart.** The text lives in a plain file that is re-read per prompt
    assembly, so your next message already carries the edit. Editing that file in Notepad works too.
 
@@ -68,10 +72,11 @@ the bottom.
 node scripts/verify-live.mjs
 ```
 
-It reads the address and token from the harness log by itself, then checks four things: the host half
+It reads the address and token from the harness log by itself, then checks five things: the host half
 loaded, the GUI route answers, saving really reaches disk (it backs up and restores your text;
-`--no-write` skips that), and the browser half is assembled into the page's `window.__DSH_BOOT__` and
-fetchable from `/plugins`.
+`--no-write` skips that), the browser half is assembled into the page's `window.__DSH_BOOT__` and
+fetchable from `/plugins`, and **which position the tab took** (`rank` should equal the number of
+existing tabs plus one).
 
 ## Layout
 

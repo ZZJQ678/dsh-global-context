@@ -180,6 +180,43 @@ test('路由拒绝：非字符串、超大、跨站、错误方法', async () =>
   assert.equal(wrongMethod.statusCode, 405);
 });
 
+test('定位上报路由：POST 记下来、GET 回读、写进状态文件，跨站拒绝', async () => {
+  const { webServer } = await createHost({ textPath: textFile });
+  const route = webServer.routes.get(plugin.PLACEMENT_ROUTE);
+  assert.ok(route !== undefined, `未注册 ${plugin.PLACEMENT_ROUTE}`);
+
+  const crossSite = fakeResponse();
+  await route.handler(fakeRequest('POST', JSON.stringify({ order: 21 }), { origin: 'https://evil.example' }), crossSite);
+  assert.equal(crossSite.statusCode, 403);
+
+  const payload = {
+    order: 21,
+    smart: true,
+    rank: 4,
+    others: [
+      { id: 'chat', order: 0 },
+      { id: 'trajectory', order: 10 },
+      { id: 'context', order: 20 },
+    ],
+  };
+  const posted = fakeResponse();
+  await route.handler(fakeRequest('POST', JSON.stringify(payload)), posted);
+  assert.equal(posted.statusCode, 200);
+  assert.equal(JSON.parse(posted.body).placement.rank, 4);
+
+  const readBack = fakeResponse();
+  await route.handler(fakeRequest('GET'), readBack);
+  const placement = JSON.parse(readBack.body).placement;
+  assert.equal(placement.order, 21);
+  assert.equal(placement.smart, true);
+  assert.deepEqual(placement.others.map((tab) => tab.id), ['chat', 'trajectory', 'context']);
+
+  // 状态文件里也要有，便于事后核对（这是 verify-live.mjs 读的地方）。
+  const status = JSON.parse(readFileSync(path.join(workDir, 'global-context.status.json'), 'utf8'));
+  assert.equal(status.placementRouteRegistered, true);
+  assert.equal(status.placement.rank, 4);
+});
+
 test('没有 webServer 时仍然照常注入（GUI 通道缺席不影响提示词）', async () => {
   writeFileSync(textFile, '只有提示词也要能用。', 'utf8');
   const ctx = new Context();

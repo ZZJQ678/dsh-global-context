@@ -6,14 +6,17 @@
  *   node scripts/verify-live.mjs --no-write   # 跳过写入测试，纯只读
  *   node scripts/verify-live.mjs --url http://127.0.0.1:43129 --log <harness.log 路径>
  *
- * 检查四件事：
+ * 检查五件事：
  *   1. 宿主半边加载了没有      —— $DSH_HOME/global-context.status.json
  *   2. GUI 读写路由在不在      —— GET /api/dsh-global-context
  *   3. 保存能不能真的落盘      —— POST 后再 GET 往返比对（默认开启，结束前还原原内容）
  *   4. 浏览器半边会不会被送进浏览器 —— 首页 window.__DSH_BOOT__ 里有没有本包，
  *                                      以及 /plugins/<包名>/client.js 能不能取到
+ *   5. 标签页排在第几位        —— GET /api/dsh-global-context/placement
+ *                                      （浏览器加载页面时上报，rank 应等于已有标签页数 + 1）
  *
  * 第 4 项是关键：首页里出现本包名，就说明标签页会随页面加载被注册。
+ * 第 5 项依赖浏览器真的加载过页面；刚重启还没刷新时只提醒、不判失败。
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -199,6 +202,33 @@ if (endpoint.error !== undefined) {
     }
   } catch (error) {
     check('首页可取到', false, error.message);
+  }
+
+  // ── 5. 标签页位次（浏览器半边加载后上报）────────────────────
+  try {
+    const response = await fetch(`${base}/api/dsh-global-context/placement`, { headers });
+    const body = await response.json().catch(() => null);
+    const placement = body?.placement ?? null;
+    if (placement === null || placement.order === null) {
+      warn('标签页位次尚未上报', '浏览器还没加载过新版本页面（刷新一次 GUI 即可）');
+    } else {
+      const others = Array.isArray(placement.others) ? placement.others : [];
+      const ahead = others.filter((tab) => tab.order <= placement.order);
+      check('标签页位次已上报', true, `order=${placement.order} rank=${placement.rank} smart=${placement.smart}`);
+      console.log(`      排在我前面的标签页：${ahead.map((tab) => `${tab.id}@${tab.order}`).join(', ') || '（无）'}`);
+      check(
+        '位次 = 已有标签页数量 + 1（也就是排在最后）',
+        placement.rank === others.length + 1,
+        `rank=${placement.rank}，其它标签页 ${others.length} 个`,
+      );
+      check(
+        '用的是智能定位（真读到了插槽内容）',
+        placement.smart === true,
+        placement.smart === true ? '' : '退回了兜底值 900 —— 插槽没暴露 entries/subscribe，属于降级但仍排在最后',
+      );
+    }
+  } catch (error) {
+    warn('标签页位次查询失败', error.message);
   }
 
   console.log(failures === 0 ? '\n线上验证：全部通过 —— 插件已完全生效' : `\n线上验证：${failures} 项失败`);
