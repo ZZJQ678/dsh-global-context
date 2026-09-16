@@ -1,0 +1,17 @@
+# dsh-global-context 的加载器补丁层（bundle patch）。
+#
+# 只要这个包被 dsh 装进 profile，dsh 的 reconcilePlugins() 就会因为它声明了
+# dsh.bundle.patch 而自动把包名追加进 profile 的 dsh.profile.bundles；
+# 这一层再把宿主半边挂成一个 loader 条目。
+#
+# 文本文件位置由插件自身默认值决定：$DSH_HOME/global-context.md
+# 也可以在 config 里用绝对路径覆盖，例如：
+#   textPath: !!js dshHomePath('my-context.md')
+
+- insert:
+    - id: dsh-global-context
+      name: 'dsh-global-context'
+      config:
+        # 总开关。false 时完全不注入（标签页仍可读写文本）。
+        enabled: true
+        # 留空 order：自动取「内置身份段之前 100」，即整段系统提示词的第一节。
