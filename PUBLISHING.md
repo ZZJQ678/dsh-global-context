@@ -47,8 +47,7 @@ git push -u origin main
 dsh plugin --profile web add -w github:ZZJQ678/dsh-global-context
 ```
 
-npm 包名 `dsh-global-context` 尚未被占用；发布到 npm 之后，命令可直接写成
-`dsh plugin --profile web add -w dsh-global-context`（发布需要 npm 登录凭据）。
+本包只通过 GitHub 分发（没有发布到 npm），评审照这条命令就能装上。
 
 ## 第 3 步：给精选列表提 PR（**新增一个 YAML 文件，不要改 README**）
 
@@ -85,8 +84,8 @@ description:
 不满足仓库年龄时**先别提交**：等满 1 天再提，重新提交不会有任何负面影响（这是官方
 `contributing.md` 的明确说法）。
 
-另外两项可选但推荐：把包发布到 npm（预构建安装可跳过构建授权，且市场能显示下载量）；
-以及在仓库里放一个 `screenshots.json` 列出 1–8 张截图，让市场详情页像 App Store 那样展示。
+还有一项可选：在仓库里放一个 `screenshots.json` 列出 1–8 张截图，让市场详情页像 App Store 那样展示。
+（本包不发布到 npm，所以不需要 npm 相关准备。）
 
 ## 关于「本地已装」与「公开目录」的区别
 

@@ -9,14 +9,9 @@ Global context for DSH: a prompt injected at the **very top of every session's s
 
 1. **Injects a global context.** Your text becomes the first section of the system prompt — ahead of
    the built-in identity text — for every session, every model, subagents included.
-2. **Adds a conversation-view tab.** A **stock DSH conversation view has only one tab, `Chat`**;
-   `Trajectory` and `Context` appear only once plugins add them. This plugin adds
-   **Global Context**: a text box you can edit, save and clear.
-   **Its position is discovered at runtime**: it reads the sort values of the tabs already in the
-   slot and stops at the **first free slot** — i.e. immediately after the last one (with
-   Chat/Trajectory/Context present it is the 4th tab). If a plugin later lands ahead of it, it
-   steps one place back automatically. When the slot exposes no way to inspect entries, it falls
-   back to the large constant `900`, which also sorts last.
+2. **Adds a conversation-view tab.** A stock DSH conversation view has only one tab, `Chat`;
+   `Trajectory` and `Context` appear only once plugins add them. This plugin's **Global Context**
+   tab sorts itself after the existing tabs and holds a text box you can edit, save and clear.
 3. **Applies immediately, no restart.** The text lives in a plain file that is re-read per prompt
    assembly, so your next message already carries the edit. Editing that file in Notepad works too.
 
@@ -29,8 +24,8 @@ dsh plugin --profile web add -w github:ZZJQ678/dsh-global-context
 The package declares `dsh.bundle.patch`, so it is appended to the profile's `dsh.profile.bundles`
 automatically — no manual config editing. **Restart DSH once** so the browser-side half loads.
 
-> The npm name is **`dsh-global-context`** (unclaimed on npm as of writing). Once published to npm,
-> the command becomes `dsh plugin --profile web add -w dsh-global-context`.
+The package is distributed through GitHub only (it is not published to npm), so the command above is
+the complete install instruction.
 
 ## How to find it in the plugin market
 
@@ -40,9 +35,8 @@ automatically — no manual config editing. **Restart DSH once** so the browser-
 - once the public catalogue includes it, it is searchable in the main list too
   (see [PUBLISHING.md](PUBLISHING.md)).
 
-The market matches four fields — package name, install spec, description (by UI language) and owner —
-so either keyword works. Its detail page renders this repository's `README.md`, which is deliberately
-the **Chinese** version ([English here](README.en.md)).
+Either keyword works. The detail page renders this repository's `README.md`, which is deliberately the
+**Chinese** version ([English here](README.en.md)).
 
 ## Configuration
 
