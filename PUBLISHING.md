@@ -47,8 +47,6 @@ git push -u origin main
 dsh plugin --profile web add -w github:ZZJQ678/dsh-global-context
 ```
 
-本包只通过 GitHub 分发（没有发布到 npm），评审照这条命令就能装上。
-
 ## 第 3 步：给精选列表提 PR（**新增一个 YAML 文件，不要改 README**）
 
 精选列表的两个 README 都是**脚本生成**的，手工编辑会被打回。列表数据在
@@ -85,7 +83,6 @@ description:
 `contributing.md` 的明确说法）。
 
 还有一项可选：在仓库里放一个 `screenshots.json` 列出 1–8 张截图，让市场详情页像 App Store 那样展示。
-（本包不发布到 npm，所以不需要 npm 相关准备。）
 
 ## 关于「本地已装」与「公开目录」的区别
 
